@@ -1,0 +1,41 @@
+name: AI Playwright Test Script Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'tests/**'
+      - '**/*.spec.ts'
+      - '**/*.test.ts'
+
+jobs:
+  ai-code-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build TypeScript Agent
+        run: npm run build
+
+      - name: Run AI Review Agent
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node dist/index.js
